@@ -1,0 +1,49 @@
+version: '3'
+
+networks:
+    nginx-php-mysql:
+
+services:
+    nginx-service:
+        image: nginx:stable-alpine
+        container_name: nginx-container
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./wordpress:/var/www/html
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php74-service
+            - db
+        networks:
+            - "nginx-php-mysql"
+
+    php74-service:
+        build:
+            context: .
+            dockerfile: ./php/Dockerfile
+        container_name: php74-container
+        ports:
+            - "9000:9000"
+        volumes:
+            - ./wordpress:/var/www/html
+        depends_on:
+            - db
+        networks:
+            - "nginx-php-mysql"
+    db:
+        image: mysql:5.7
+        volumes:
+            - db_data:/var/lib/mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: wordpress
+            MYSQL_USER: test
+            MYSQL_PASSWORD: test
+        networks:
+            - "nginx-php-mysql"
+
+volumes:
+    db_data: {}
